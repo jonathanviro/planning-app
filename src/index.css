@@ -1,0 +1,27 @@
+@import "tailwindcss";
+
+@theme {
+  --color-brand-red: #c8102e;
+  --color-brand-red-deep: #49060c;
+  --color-brand-red-soft: #ffeceb;
+  --color-neutral-grey-soft: #f2f3f3;
+  --color-neutral-grey: #d0d0d1;
+  --color-neutral-grey-deep: #84888b;
+}
+
+html,
+body,
+#root {
+  height: 100%;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  background-color: var(--color-neutral-grey-soft);
+  font-family:
+    system-ui,
+    -apple-system,
+    sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
