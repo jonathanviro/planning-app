@@ -590,9 +590,7 @@ export default function ManagerDashboard() {
                     width={90}
                     tick={{ fontSize: 10 }}
                   />
-                  <Tooltip
-                    formatter={(value: number) => [value, "Iniciativas"]}
-                  />
+                  <Tooltip formatter={(value: any) => [value, "Iniciativas"]} />
                   <Bar dataKey="value" fill={COLORS[1]} barSize={15}>
                     <LabelList
                       dataKey="value"
@@ -632,9 +630,7 @@ export default function ManagerDashboard() {
                       />
                     ))}
                   </Pie>
-                  <Tooltip
-                    formatter={(value: number) => [value, "Iniciativas"]}
-                  />
+                  <Tooltip formatter={(value: any) => [value, "Iniciativas"]} />
                   <Legend
                     layout="vertical"
                     verticalAlign="middle"

@@ -382,7 +382,7 @@ export default function UserDashboard() {
                           />
                         ))}
                       </Pie>
-                      <Tooltip formatter={(value: number) => `${value}h`} />
+                      <Tooltip formatter={(value: any) => `${value}h`} />
                       <Legend
                         layout="vertical"
                         verticalAlign="middle"
@@ -421,7 +421,7 @@ export default function UserDashboard() {
                         ))}
                       </Pie>
                       <Tooltip
-                        formatter={(value: number) => [value, "Iniciativas"]}
+                        formatter={(value: any) => [value, "Iniciativas"]}
                       />
                       <Legend
                         layout="vertical"
@@ -460,7 +460,7 @@ export default function UserDashboard() {
                       />
                       <YAxis />
                       <Tooltip
-                        formatter={(value: number) => [value, "Iniciativas"]}
+                        formatter={(value: any) => [value, "Iniciativas"]}
                       />
                       <Bar dataKey="value" fill={COLORS[1]} name="Cantidad">
                         <LabelList
@@ -486,7 +486,7 @@ export default function UserDashboard() {
                       <CartesianGrid strokeDasharray="3 3" vertical={false} />
                       <XAxis dataKey="name" />
                       <YAxis />
-                      <Tooltip formatter={(value: number) => `${value}h`} />
+                      <Tooltip formatter={(value: any) => `${value}h`} />
                       <Legend verticalAlign="top" height={36} />
                       <Bar
                         dataKey="Operative Initiative"
