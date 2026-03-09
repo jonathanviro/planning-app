@@ -18,7 +18,7 @@ export default function SelectProfile() {
       <div className="flex flex-col h-full justify-center">
         <div className="text-center mb-10">
           <h1 className="text-6xl font-black text-brand-red mb-2 tracking-tight">
-            Planificación ITBP
+            IT Strat Plan 2026
           </h1>
           <p className="text-2xl text-neutral-grey-deep font-light">
             Toca tu tarjeta para comenzar
@@ -30,7 +30,9 @@ export default function SelectProfile() {
             <ProfileCard
               key={name}
               id={name}
-              name={name}
+              name={
+                name === "Randol Benavides" ? "Randol, Rommel, Julian" : name
+              }
               selectedId={selected}
               onSelect={handleSelect}
             />
