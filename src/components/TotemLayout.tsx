@@ -21,6 +21,12 @@ export default function TotemLayout({
       <div className="relative z-10 flex h-full w-full max-w-[1080px] flex-col flex-1 min-h-0">
         {children}
       </div>
+
+      <div className="relative z-10 w-full max-w-[1080px] mt-2 flex justify-end">
+        <p className="text-[10px] text-neutral-grey-deep/40 font-medium select-none">
+          Dev by Jonathan Vivero Rodriguez • jonathanviro37@gmail.com
+        </p>
+      </div>
     </div>
   );
 }

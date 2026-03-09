@@ -106,7 +106,20 @@ export const usePlanningStore = create<PlanningState>((set, get) => ({
         const updatedHours = { ...init.hours, ...hours };
         updatedHours.total =
           updatedHours.q1 + updatedHours.q2 + updatedHours.q3 + updatedHours.q4;
-        return { ...init, hours: updatedHours };
+
+        // Actualizamos assignedQuarters localmente basándonos en las horas
+        let newQuarters = init.assignedQuarters || [];
+        (Object.keys(hours) as Quarter[]).forEach((q) => {
+          const val = hours[q];
+          if (val !== undefined) {
+            if (val > 0) {
+              if (!newQuarters.includes(q)) newQuarters = [...newQuarters, q];
+            } else {
+              newQuarters = newQuarters.filter((xq) => xq !== q);
+            }
+          }
+        });
+        return { ...init, hours: updatedHours, assignedQuarters: newQuarters };
       }),
     }));
 

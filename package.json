@@ -3,6 +3,7 @@
   "private": true,
   "version": "0.0.0",
   "type": "module",
+  "author": "Jonathan Vivero Rodriguez <jonathanviro37@gmail.com>",
   "packageManager": "pnpm@9.0.0",
   "scripts": {
     "dev": "vite",

@@ -84,3 +84,5 @@ La estructura se mantuvo lo más plana posible para facilitar la navegación:
 ---
 
 _Proyecto desarrollado para evento de planificación ITBP._
+
+**Desarrollado por:** Jonathan Vivero Rodriguez (jonathanviro37@gmail.com)

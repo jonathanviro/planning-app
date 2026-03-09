@@ -202,10 +202,15 @@ export default function UserDashboard() {
     quarters: Quarter[],
   ) => {
     if (modalInitiative) {
-      updateInitiativeHours(modalInitiative.id, hours);
-      quarters.forEach((q) => {
-        assignToQuarter(modalInitiative.id, q);
+      // Preparamos las horas: si un trimestre no está seleccionado en el modal,
+      // debemos asegurarnos de enviar 0 horas para ese trimestre.
+      const hoursToSend = { ...hours };
+      (["q1", "q2", "q3", "q4"] as Quarter[]).forEach((q) => {
+        if (!quarters.includes(q)) {
+          hoursToSend[q] = 0;
+        }
       });
+      updateInitiativeHours(modalInitiative.id, hoursToSend);
     }
   };
 
@@ -225,12 +230,10 @@ export default function UserDashboard() {
       const initiative = initiatives.find((i) => i.id === initiativeId);
       if (initiative) {
         const updatedHours = {
-          ...initiative.hours,
           [quarterId]: 0,
         };
         updateInitiativeHours(initiativeId, updatedHours);
       }
-      removeFromQuarter(initiativeId, quarterId);
     }
     setConfirmModal({ isOpen: false, initiativeId: null, quarterId: null });
   };
