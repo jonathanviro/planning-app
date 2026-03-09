@@ -48,7 +48,7 @@ export default function ManagerDashboard() {
     fetchInitiatives();
   }, [fetchInitiatives]);
 
-  // --- LÓGICA DE DATOS Y KPIs ---
+  // --- LÓGICA DE DATOS Y KPIs ----
 
   const kpis = useMemo(() => {
     const totalUsers = IT_BUSINESS_PARTNERS.length;
