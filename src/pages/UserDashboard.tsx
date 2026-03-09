@@ -95,10 +95,7 @@ export default function UserDashboard() {
   const initiatives = usePlanningStore((state) => state.initiatives);
   const fetchInitiatives = usePlanningStore((state) => state.fetchInitiatives);
   const isLoading = usePlanningStore((state) => state.isLoading);
-  const assignToQuarter = usePlanningStore((state) => state.assignToQuarter);
-  const removeFromQuarter = usePlanningStore(
-    (state) => state.removeFromQuarter,
-  );
+
   const updateInitiativeHours = usePlanningStore(
     (state) => state.updateInitiativeHours,
   );

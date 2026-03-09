@@ -171,47 +171,6 @@ export default function ManagerDashboard() {
       .slice(0, topCount);
   }, [initiatives, topCount]);
 
-  // 9. Conteo por Trimestre (Nuevo)
-  const countByQuarter = useMemo(() => {
-    const counts = { q1: 0, q2: 0, q3: 0, q4: 0 };
-    initiatives.forEach((init) => {
-      init.assignedQuarters?.forEach((q) => {
-        if (q in counts) counts[q as Quarter]++;
-      });
-    });
-    return Object.entries(counts).map(([name, value]) => ({
-      name: name.toUpperCase(),
-      value,
-    }));
-  }, [initiatives]);
-
-  // 10. Prioridad por Stream (Nuevo)
-  const priorityByStream = useMemo(() => {
-    const map = new Map<
-      string,
-      { name: string; "Must Have": number; "Nice to Have": number }
-    >();
-
-    initiatives.forEach((init) => {
-      if (!map.has(init.stream)) {
-        map.set(init.stream, {
-          name: init.stream,
-          "Must Have": 0,
-          "Nice to Have": 0,
-        });
-      }
-      const entry = map.get(init.stream)!;
-      entry[init.priority]++;
-    });
-
-    return Array.from(map.values()).sort(
-      (a, b) =>
-        b["Must Have"] +
-        b["Nice to Have"] -
-        (a["Must Have"] + a["Nice to Have"]),
-    );
-  }, [initiatives]);
-
   const renderPieLabel = ({ percent, value }: any) => {
     if (pieChartValueType === "percent") {
       return `${(percent * 100).toFixed(0)}%`;
