@@ -135,7 +135,7 @@ export default function UserDashboard() {
       },
       {} as Record<string, number>,
     ),
-  ).map((value, index, arr) => ({
+  ).map((value, index) => ({
     name: Object.keys(
       userInitiatives.reduce(
         (acc, curr) => {
