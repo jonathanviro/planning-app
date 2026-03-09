@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import clsx from "clsx";
-import { Plus, ChevronDown, ChevronUp } from "lucide-react";
+import { Plus, ChevronUp } from "lucide-react";
 import type { Initiative, Quarter } from "../types";
 
 interface Props {
