@@ -4,6 +4,20 @@ import TotemLayout from "../components/TotemLayout";
 import ProfileCard from "../components/ProfileCard";
 import { IT_BUSINESS_PARTNERS } from "../types";
 
+// Mapa de imágenes: Asegúrate de guardar los archivos en la carpeta /public/profiles/
+const PROFILE_IMAGES: Record<string, string[]> = {
+  "Andy Sánchez": ["/profiles/andy.jpg"],
+  "Danny Pérez": ["/profiles/danny.jpg"],
+  "Edwin Calderón": ["/profiles/edwin.jpg"],
+  "Leslye Pérez": ["/profiles/leslye.jpg"],
+  "Randol Benavides": [
+    "/profiles/randol.jpg",
+    "/profiles/rommel.jpg",
+    "/profiles/julian.jpg",
+  ],
+  "Saúl Bohórquez": ["/profiles/saul.jpg"],
+};
+
 export default function SelectProfile() {
   const [selected, setSelected] = useState<string | null>(null);
   const navigate = useNavigate();
@@ -33,6 +47,7 @@ export default function SelectProfile() {
               name={
                 name === "Randol Benavides" ? "Randol, Rommel, Julian" : name
               }
+              imageUrls={PROFILE_IMAGES[name]}
               selectedId={selected}
               onSelect={handleSelect}
             />

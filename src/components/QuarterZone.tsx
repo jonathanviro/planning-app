@@ -1,6 +1,6 @@
 import { useDroppable } from "@dnd-kit/core";
 import clsx from "clsx";
-import { AlertTriangle, X, Maximize2 } from "lucide-react";
+import { AlertTriangle, X, Maximize2, Lock } from "lucide-react";
 import type { Initiative, Quarter } from "../types";
 
 interface Props {
@@ -95,46 +95,60 @@ export default function QuarterZone({
             Arrastra aquí
           </div>
         )}
-        {[...initiatives].reverse().map((init) => (
-          <div
-            key={init.id}
-            onClick={() => onEdit(init)}
-            className="group relative bg-white p-3 rounded-2xl shadow-sm border border-neutral-grey-soft hover:border-brand-red-soft transition-all cursor-pointer"
-          >
-            <div className="flex justify-between items-start mb-1">
-              <span
-                className={clsx(
-                  "text-[10px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wider",
-                  init.priority === "Must Have"
-                    ? "bg-brand-red/10 text-brand-red"
-                    : "bg-neutral-grey-soft text-neutral-grey-deep",
+        {[...initiatives].reverse().map((init) => {
+          const isEditable = init.workType === "Operative Initiative";
+          return (
+            <div
+              key={init.id}
+              onClick={() => isEditable && onEdit(init)}
+              className={clsx(
+                "group relative p-3 rounded-2xl shadow-sm border transition-all",
+                isEditable
+                  ? "bg-white border-neutral-grey-soft hover:border-brand-red-soft cursor-pointer"
+                  : "bg-neutral-grey-soft/40 border-neutral-grey-soft cursor-not-allowed",
+              )}
+            >
+              <div className="flex justify-between items-start mb-1">
+                <span
+                  className={clsx(
+                    "text-[10px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wider",
+                    init.priority === "Must Have"
+                      ? "bg-brand-red/10 text-brand-red"
+                      : "bg-neutral-grey-soft text-neutral-grey-deep",
+                  )}
+                >
+                  {init.priority}
+                </span>
+                {isEditable ? (
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onRemove(init.id);
+                    }}
+                    className="text-neutral-grey hover:text-brand-red transition-colors p-1 -mr-2 -mt-2"
+                  >
+                    <X size={16} />
+                  </button>
+                ) : (
+                  <div className="text-neutral-grey p-1 -mr-2 -mt-2">
+                    <Lock size={14} />
+                  </div>
                 )}
-              >
-                {init.priority}
-              </span>
-              <button
-                onClick={(e) => {
-                  e.stopPropagation();
-                  onRemove(init.id);
-                }}
-                className="text-neutral-grey hover:text-brand-red transition-colors p-1 -mr-2 -mt-2"
-              >
-                <X size={16} />
-              </button>
+              </div>
+              <h4 className="font-bold text-brand-red-deep text-sm leading-tight mb-1 line-clamp-2">
+                {init.workName}
+              </h4>
+              <div className="flex justify-between items-center">
+                <p className="text-[10px] text-neutral-grey-deep truncate max-w-[70%]">
+                  {init.workType}
+                </p>
+                <span className="text-xs font-bold text-brand-red">
+                  {init.hours[id]}h
+                </span>
+              </div>
             </div>
-            <h4 className="font-bold text-brand-red-deep text-sm leading-tight mb-1 line-clamp-2">
-              {init.workName}
-            </h4>
-            <div className="flex justify-between items-center">
-              <p className="text-[10px] text-neutral-grey-deep truncate max-w-[70%]">
-                {init.workType}
-              </p>
-              <span className="text-xs font-bold text-brand-red">
-                {init.hours[id]}h
-              </span>
-            </div>
-          </div>
-        ))}
+          );
+        })}
       </div>
     </div>
   );

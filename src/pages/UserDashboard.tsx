@@ -64,6 +64,12 @@ const WORK_TYPES = [
 const PRIORITIES = ["Must Have", "Nice to Have"];
 const CLASSIFICATIONS = ["AI", "Power App", "Project", "PWA", "Report"];
 
+const RANDOL_TEAM_IMAGES = [
+  "/profiles/randol.jpg",
+  "/profiles/rommel.jpg",
+  "/profiles/julian.jpg",
+];
+
 export default function UserDashboard() {
   const { id } = useParams();
   const navigate = useNavigate();
@@ -212,12 +218,15 @@ export default function UserDashboard() {
   };
 
   const handleEditInitiative = (initiative: Initiative, quarter: Quarter) => {
+    if (initiative.workType !== "Operative Initiative") return;
     setModalInitiative(initiative);
     setModalTargetQuarter(quarter);
     setIsModalOpen(true);
   };
 
   const handleRemoveRequest = (initiativeId: string, quarter: Quarter) => {
+    const initiative = initiatives.find((i) => i.id === initiativeId);
+    if (initiative?.workType !== "Operative Initiative") return;
     setConfirmModal({ isOpen: true, initiativeId, quarterId: quarter });
   };
 
@@ -291,9 +300,26 @@ export default function UserDashboard() {
         <div className="bg-white p-3 rounded-[2rem] shadow-sm mb-6 flex items-center justify-between gap-6 pr-6">
           {/* Perfil */}
           <div className="flex items-center gap-4 bg-neutral-grey-soft/30 p-2 pr-6 rounded-[1.5rem]">
-            <div className="w-14 h-14 rounded-full bg-brand-red text-white flex items-center justify-center text-2xl font-bold shadow-sm ring-2 ring-white">
-              {userName.charAt(0)}
-            </div>
+            {userName === "Randol Benavides" ? (
+              <div className="flex -space-x-4 pl-2">
+                {RANDOL_TEAM_IMAGES.map((img, i) => (
+                  <div
+                    key={i}
+                    className="w-14 h-14 rounded-full border-2 border-white overflow-hidden relative z-10 shadow-sm"
+                  >
+                    <img
+                      src={img}
+                      alt="Team Member"
+                      className="w-full h-full object-cover"
+                    />
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="w-14 h-14 rounded-full bg-brand-red text-white flex items-center justify-center text-2xl font-bold shadow-sm ring-2 ring-white">
+                {userName.charAt(0)}
+              </div>
+            )}
             <div>
               <h1 className="text-xl font-black text-brand-red-deep leading-tight">
                 {userName === "Randol Benavides"

@@ -1,5 +1,5 @@
 import clsx from "clsx";
-import { X } from "lucide-react";
+import { X, Lock } from "lucide-react";
 import type { Initiative, Quarter } from "../types";
 
 interface Props {
@@ -82,46 +82,63 @@ export default function QuarterModal({
         {/* Content */}
         <div className="flex-1 overflow-y-auto p-6 bg-neutral-grey-soft/20">
           <div className="grid grid-cols-3 gap-4">
-            {[...initiatives].reverse().map((init) => (
-              <div
-                key={init.id}
-                onClick={() => onEdit(init)}
-                className="group relative bg-white p-4 rounded-2xl shadow-sm border border-neutral-grey-soft hover:border-brand-red-soft transition-all cursor-pointer hover:shadow-md flex flex-col"
-              >
-                <div className="flex justify-between items-start mb-2">
-                  <span
-                    className={clsx(
-                      "text-[10px] font-bold px-2 py-1 rounded-full uppercase tracking-wider",
-                      init.priority === "Must Have"
-                        ? "bg-brand-red/10 text-brand-red"
-                        : "bg-neutral-grey-soft text-neutral-grey-deep",
+            {[...initiatives].reverse().map((init) => {
+              const isEditable = init.workType === "Operative Initiative";
+              return (
+                <div
+                  key={init.id}
+                  onClick={() => isEditable && onEdit(init)}
+                  className={clsx(
+                    "group relative p-4 rounded-2xl shadow-sm border transition-all flex flex-col",
+                    isEditable
+                      ? "bg-white border-neutral-grey-soft hover:border-brand-red-soft cursor-pointer hover:shadow-md"
+                      : "bg-neutral-grey-soft/40 border-neutral-grey-soft cursor-not-allowed",
+                  )}
+                >
+                  <div className="flex justify-between items-start mb-2">
+                    <span
+                      className={clsx(
+                        "text-[10px] font-bold px-2 py-1 rounded-full uppercase tracking-wider",
+                        init.priority === "Must Have"
+                          ? "bg-brand-red/10 text-brand-red"
+                          : "bg-neutral-grey-soft text-neutral-grey-deep",
+                      )}
+                    >
+                      {init.priority}
+                    </span>
+                    {isEditable ? (
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          onRemove(init.id);
+                        }}
+                        className="text-neutral-grey hover:text-brand-red transition-colors p-1 -mr-2 -mt-2"
+                      >
+                        <X size={20} />
+                      </button>
+                    ) : (
+                      <div
+                        className="text-neutral-grey p-1 -mr-2 -mt-2"
+                        title="Bloqueado por Planeación Estratégica"
+                      >
+                        <Lock size={16} />
+                      </div>
                     )}
-                  >
-                    {init.priority}
-                  </span>
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      onRemove(init.id);
-                    }}
-                    className="text-neutral-grey hover:text-brand-red transition-colors p-1 -mr-2 -mt-2"
-                  >
-                    <X size={20} />
-                  </button>
+                  </div>
+                  <h4 className="font-bold text-brand-red-deep text-base leading-tight mb-3 line-clamp-2">
+                    {init.workName}
+                  </h4>
+                  <div className="flex justify-between items-center mt-auto pt-2 border-t border-neutral-grey-soft/50">
+                    <p className="text-xs text-neutral-grey-deep truncate max-w-[70%]">
+                      {init.workType}
+                    </p>
+                    <span className="text-sm font-bold text-brand-red">
+                      {init.hours[quarterId]}h
+                    </span>
+                  </div>
                 </div>
-                <h4 className="font-bold text-brand-red-deep text-base leading-tight mb-3 line-clamp-2">
-                  {init.workName}
-                </h4>
-                <div className="flex justify-between items-center mt-auto pt-2 border-t border-neutral-grey-soft/50">
-                  <p className="text-xs text-neutral-grey-deep truncate max-w-[70%]">
-                    {init.workType}
-                  </p>
-                  <span className="text-sm font-bold text-brand-red">
-                    {init.hours[quarterId]}h
-                  </span>
-                </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
 
           {initiatives.length === 0 && (

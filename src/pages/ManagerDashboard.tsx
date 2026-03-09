@@ -15,14 +15,7 @@ import {
   ReferenceLine,
   LabelList,
 } from "recharts";
-import {
-  Users,
-  TrendingUp,
-  AlertTriangle,
-  Award,
-  ArrowLeft,
-  Activity,
-} from "lucide-react";
+import { TrendingUp, Award, ArrowLeft, Activity } from "lucide-react";
 import clsx from "clsx";
 
 import TotemLayout from "../components/TotemLayout";
@@ -66,25 +59,8 @@ export default function ManagerDashboard() {
     );
     const avgUtilization = (totalAssignedHours / globalCapacity) * 100;
 
-    // Carga por usuario
-    const userLoads = IT_BUSINESS_PARTNERS.map((partner) => {
-      const hours = initiatives
-        .filter((i) => i.itBusinessPartner === partner)
-        .reduce((acc, i) => acc + i.hours.total, 0);
-      return { name: partner, hours };
-    });
-
-    const maxLoadUser = userLoads.reduce((prev, current) =>
-      prev.hours > current.hours ? prev : current,
-    );
-    const minLoadUser = userLoads.reduce((prev, current) =>
-      prev.hours < current.hours ? prev : current,
-    );
-
     return {
       avgUtilization,
-      maxLoadUser,
-      minLoadUser,
       totalAssignedHours,
       globalCapacity,
     };
@@ -160,7 +136,12 @@ export default function ManagerDashboard() {
       const hours = initiatives
         .filter((i) => i.itBusinessPartner === partner)
         .reduce((acc, i) => acc + i.hours.total, 0);
-      return { name: partner.split(" ")[0], fullName: partner, hours }; // Nombre corto para eje X
+
+      const name =
+        partner === "Randol Benavides"
+          ? "Randol, Rommel, Julian"
+          : partner.split(" ")[0];
+      return { name, fullName: partner, hours };
     });
   }, [initiatives]);
 
@@ -200,7 +181,7 @@ export default function ManagerDashboard() {
       </div>
 
       {/* FILA 1: KPIs DE ALTO NIVEL */}
-      <div className="grid grid-cols-4 gap-4 mb-6">
+      <div className="grid grid-cols-2 gap-4 mb-6">
         <div className="bg-white p-4 rounded-2xl shadow-sm border-l-4 border-brand-red flex items-center gap-4">
           <div className="p-3 bg-brand-red-soft rounded-full text-brand-red">
             <Activity size={24} />
@@ -211,40 +192,6 @@ export default function ManagerDashboard() {
             </p>
             <p className="text-3xl font-black text-brand-red-deep">
               {kpis.avgUtilization.toFixed(1)}%
-            </p>
-          </div>
-        </div>
-
-        <div className="bg-white p-4 rounded-2xl shadow-sm border-l-4 border-brand-red-deep flex items-center gap-4">
-          <div className="p-3 bg-neutral-grey-soft rounded-full text-brand-red-deep">
-            <AlertTriangle size={24} />
-          </div>
-          <div>
-            <p className="text-sm text-neutral-grey-deep font-bold uppercase">
-              Mayor Carga
-            </p>
-            <p className="text-lg font-bold text-brand-red-deep leading-tight">
-              {kpis.maxLoadUser.name.split(" ")[0]}
-            </p>
-            <p className="text-xs text-neutral-grey-deep">
-              {kpis.maxLoadUser.hours}h
-            </p>
-          </div>
-        </div>
-
-        <div className="bg-white p-4 rounded-2xl shadow-sm border-l-4 border-neutral-grey-deep flex items-center gap-4">
-          <div className="p-3 bg-neutral-grey-soft rounded-full text-neutral-grey-deep">
-            <Users size={24} />
-          </div>
-          <div>
-            <p className="text-sm text-neutral-grey-deep font-bold uppercase">
-              Menor Carga
-            </p>
-            <p className="text-lg font-bold text-brand-red-deep leading-tight">
-              {kpis.minLoadUser.name.split(" ")[0]}
-            </p>
-            <p className="text-xs text-neutral-grey-deep">
-              {kpis.minLoadUser.hours}h
             </p>
           </div>
         </div>
@@ -311,7 +258,10 @@ export default function ManagerDashboard() {
                         {init.workName}
                       </p>
                       <p className="text-xs text-neutral-grey-deep font-medium mt-1">
-                        {init.itBusinessPartner} • {init.workType}
+                        {init.itBusinessPartner === "Randol Benavides"
+                          ? "Randol, Rommel, Julian"
+                          : init.itBusinessPartner}{" "}
+                        • {init.workType}
                       </p>
                     </div>
                   </div>
@@ -537,7 +487,7 @@ export default function ManagerDashboard() {
                   <YAxis
                     dataKey="name"
                     type="category"
-                    width={80}
+                    width={130}
                     tick={{ fontSize: 11 }}
                   />
                   <Tooltip />
