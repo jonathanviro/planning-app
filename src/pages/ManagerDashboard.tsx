@@ -42,34 +42,6 @@ const COLORS = [
   "#2e2e2e", // Dark
 ];
 
-const RADIAN = Math.PI / 180;
-const renderCustomizedLabel = ({
-  cx,
-  cy,
-  midAngle,
-  innerRadius,
-  outerRadius,
-  percent,
-}: any) => {
-  const radius = innerRadius + (outerRadius - innerRadius) * 0.5;
-  const x = cx + radius * Math.cos(-midAngle * RADIAN);
-  const y = cy + radius * Math.sin(-midAngle * RADIAN);
-
-  return percent > 0.05 ? (
-    <text
-      x={x}
-      y={y}
-      fill="white"
-      textAnchor={x > cx ? "start" : "end"}
-      dominantBaseline="central"
-      fontSize={10}
-      fontWeight="bold"
-    >
-      {`${(percent * 100).toFixed(0)}%`}
-    </text>
-  ) : null;
-};
-
 export default function ManagerDashboard() {
   const navigate = useNavigate();
   const initiatives = usePlanningStore((state) => state.initiatives);
@@ -199,6 +171,13 @@ export default function ManagerDashboard() {
       .slice(0, topCount);
   }, [initiatives, topCount]);
 
+  const renderPieLabel = ({ percent, value }: any) => {
+    if (pieChartValueType === "percent") {
+      return `${(percent * 100).toFixed(0)}%`;
+    }
+    return `${value}h`;
+  };
+
   return (
     <TotemLayout>
       {/* HEADER & NAVEGACIÓN */}
@@ -236,8 +215,8 @@ export default function ManagerDashboard() {
           </div>
         </div>
 
-        <div className="bg-white p-4 rounded-2xl shadow-sm border-l-4 border-yellow-500 flex items-center gap-4">
-          <div className="p-3 bg-yellow-100 rounded-full text-yellow-600">
+        <div className="bg-white p-4 rounded-2xl shadow-sm border-l-4 border-brand-red-deep flex items-center gap-4">
+          <div className="p-3 bg-neutral-grey-soft rounded-full text-brand-red-deep">
             <AlertTriangle size={24} />
           </div>
           <div>
@@ -253,8 +232,8 @@ export default function ManagerDashboard() {
           </div>
         </div>
 
-        <div className="bg-white p-4 rounded-2xl shadow-sm border-l-4 border-green-500 flex items-center gap-4">
-          <div className="p-3 bg-green-100 rounded-full text-green-600">
+        <div className="bg-white p-4 rounded-2xl shadow-sm border-l-4 border-neutral-grey-deep flex items-center gap-4">
+          <div className="p-3 bg-neutral-grey-soft rounded-full text-neutral-grey-deep">
             <Users size={24} />
           </div>
           <div>
@@ -270,8 +249,8 @@ export default function ManagerDashboard() {
           </div>
         </div>
 
-        <div className="bg-white p-4 rounded-2xl shadow-sm border-l-4 border-blue-500 flex items-center gap-4">
-          <div className="p-3 bg-blue-100 rounded-full text-blue-600">
+        <div className="bg-white p-4 rounded-2xl shadow-sm border-l-4 border-brand-red flex items-center gap-4">
+          <div className="p-3 bg-brand-red-soft rounded-full text-brand-red">
             <TrendingUp size={24} />
           </div>
           <div>
@@ -416,11 +395,7 @@ export default function ManagerDashboard() {
                     outerRadius={80}
                     paddingAngle={5}
                     dataKey="value"
-                    label={
-                      pieChartValueType === "percent"
-                        ? renderCustomizedLabel
-                        : true
-                    }
+                    label={renderPieLabel}
                   >
                     {hoursByWorkType.map((_, index) => (
                       <Cell
@@ -458,11 +433,7 @@ export default function ManagerDashboard() {
                     outerRadius={80}
                     paddingAngle={5}
                     dataKey="value"
-                    label={
-                      pieChartValueType === "percent"
-                        ? renderCustomizedLabel
-                        : true
-                    }
+                    label={renderPieLabel}
                   >
                     {hoursByPriority.map((entry) => (
                       <Cell
@@ -495,7 +466,7 @@ export default function ManagerDashboard() {
               <ResponsiveContainer width="100%" height="100%">
                 <BarChart
                   data={quarterlyData}
-                  margin={{ top: 40, right: 30, left: 20, bottom: 5 }}
+                  margin={{ top: 40, right: 30, left: 20, bottom: 20 }}
                 >
                   <CartesianGrid strokeDasharray="3 3" vertical={false} />
                   <XAxis
@@ -504,7 +475,7 @@ export default function ManagerDashboard() {
                   />
                   <YAxis />
                   <Tooltip />
-                  <Legend verticalAlign="top" height={36} iconSize={10} />
+                  <Legend verticalAlign="bottom" height={36} iconSize={10} />
                   <Bar
                     dataKey="Operative Initiative"
                     stackId="a"
@@ -515,7 +486,7 @@ export default function ManagerDashboard() {
                       position="inside"
                       fill="white"
                       fontSize={10}
-                      formatter={(v: any) => (v > 0 ? v : "")}
+                      formatter={(v: any) => (v > 0 ? `${v}h` : "")}
                     />
                   </Bar>
                   <Bar
@@ -528,7 +499,7 @@ export default function ManagerDashboard() {
                       position="inside"
                       fill="white"
                       fontSize={10}
-                      formatter={(v: any) => (v > 0 ? v : "")}
+                      formatter={(v: any) => (v > 0 ? `${v}h` : "")}
                     />
                   </Bar>
                   <Bar
@@ -541,7 +512,7 @@ export default function ManagerDashboard() {
                       position="inside"
                       fill="white"
                       fontSize={10}
-                      formatter={(v: any) => (v > 0 ? v : "")}
+                      formatter={(v: any) => (v > 0 ? `${v}h` : "")}
                     />
                   </Bar>
                 </BarChart>
@@ -582,6 +553,7 @@ export default function ManagerDashboard() {
                       fill="#49060c"
                       fontSize={12}
                       fontWeight="bold"
+                      formatter={(v: any) => `${v}h`}
                     />
                     {partnerLoadData.map((entry, index) => (
                       <Cell
@@ -618,7 +590,9 @@ export default function ManagerDashboard() {
                     width={90}
                     tick={{ fontSize: 10 }}
                   />
-                  <Tooltip />
+                  <Tooltip
+                    formatter={(value: number) => [value, "Iniciativas"]}
+                  />
                   <Bar dataKey="value" fill={COLORS[1]} barSize={15}>
                     <LabelList
                       dataKey="value"
@@ -658,7 +632,9 @@ export default function ManagerDashboard() {
                       />
                     ))}
                   </Pie>
-                  <Tooltip />
+                  <Tooltip
+                    formatter={(value: number) => [value, "Iniciativas"]}
+                  />
                   <Legend
                     layout="vertical"
                     verticalAlign="middle"

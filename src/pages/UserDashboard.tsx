@@ -382,7 +382,7 @@ export default function UserDashboard() {
                           />
                         ))}
                       </Pie>
-                      <Tooltip />
+                      <Tooltip formatter={(value: number) => `${value}h`} />
                       <Legend
                         layout="vertical"
                         verticalAlign="middle"
@@ -420,7 +420,9 @@ export default function UserDashboard() {
                           />
                         ))}
                       </Pie>
-                      <Tooltip />
+                      <Tooltip
+                        formatter={(value: number) => [value, "Iniciativas"]}
+                      />
                       <Legend
                         layout="vertical"
                         verticalAlign="middle"
@@ -457,7 +459,9 @@ export default function UserDashboard() {
                         tick={{ fontSize: 10 }}
                       />
                       <YAxis />
-                      <Tooltip />
+                      <Tooltip
+                        formatter={(value: number) => [value, "Iniciativas"]}
+                      />
                       <Bar dataKey="value" fill={COLORS[1]} name="Cantidad">
                         <LabelList
                           dataKey="value"
@@ -482,7 +486,7 @@ export default function UserDashboard() {
                       <CartesianGrid strokeDasharray="3 3" vertical={false} />
                       <XAxis dataKey="name" />
                       <YAxis />
-                      <Tooltip />
+                      <Tooltip formatter={(value: number) => `${value}h`} />
                       <Legend verticalAlign="top" height={36} />
                       <Bar
                         dataKey="Operative Initiative"
@@ -495,7 +499,7 @@ export default function UserDashboard() {
                           position="inside"
                           fill="white"
                           fontSize={10}
-                          formatter={(v: any) => (v > 0 ? v : "")}
+                          formatter={(v: any) => (v > 0 ? `${v}h` : "")}
                         />
                       </Bar>
                       <Bar
@@ -509,7 +513,7 @@ export default function UserDashboard() {
                           position="inside"
                           fill="white"
                           fontSize={10}
-                          formatter={(v: any) => (v > 0 ? v : "")}
+                          formatter={(v: any) => (v > 0 ? `${v}h` : "")}
                         />
                       </Bar>
                       <Bar
@@ -523,7 +527,7 @@ export default function UserDashboard() {
                           position="inside"
                           fill="white"
                           fontSize={10}
-                          formatter={(v: any) => (v > 0 ? v : "")}
+                          formatter={(v: any) => (v > 0 ? `${v}h` : "")}
                         />
                       </Bar>
                     </BarChart>
