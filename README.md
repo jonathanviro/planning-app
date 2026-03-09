@@ -1,73 +1,86 @@
-# React + TypeScript + Vite
+# 📱 IT Business Partner Planning Tool - Frontend
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+Aplicación interactiva tipo "Tótem" (pantalla táctil) diseñada para facilitar la planificación estratégica anual de iniciativas de TI. Permite a los usuarios asignar iniciativas a trimestres, gestionar horas y visualizar la carga de trabajo en tiempo real.
 
-Currently, two official plugins are available:
+## 🚀 Contexto y Objetivo
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) (or [oxc](https://oxc.rs) when used in [rolldown-vite](https://vite.dev/guide/rolldown)) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+El objetivo era crear una interfaz **lúdica, táctil y visual** para un evento de un día. La aplicación debía ser intuitiva (Drag & Drop), reactiva (actualización inmediata de gráficos) y resiliente (guardado de estado local).
 
-## React Compiler
+## 🛠 Tech Stack & Decisiones de Diseño
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+### Core
 
-## Expanding the ESLint configuration
+- **React + Vite**: Elegido por su velocidad de desarrollo, recarga rápida (HMR) y ecosistema robusto.
+- **TypeScript**: Fundamental para mantener la integridad de los datos (Iniciativas, Trimestres, Horas) y evitar errores lógicos durante el desarrollo.
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+### Estado & Lógica
 
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
+- **Zustand**:
+  - _¿Por qué?_ Se eligió sobre Redux o Context API por su simplicidad y rendimiento. Permite manejar el estado global (asignaciones, horas, filtros) sin boilerplate excesivo.
+  - _Persistencia:_ Usamos el middleware `persist` para guardar el progreso en `localStorage`. Esto asegura que si el tótem se recarga, el usuario no pierde su trabajo (mientras no tengamos el backend conectado).
 
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
+### UI & Estilos
 
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
-```
+- **Tailwind CSS (v4)**:
+  - _¿Por qué?_ Para un desarrollo rápido de UI y fácil mantenimiento de la identidad corporativa. Definimos las variables de color (`--color-brand-red`, etc.) directamente en CSS para un cambio de tema global sencillo.
+- **Diseño "TotemLayout"**: Un layout específico pensado para pantallas grandes y táctiles, con elementos grandes y espaciado generoso para facilitar la interacción con el dedo.
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+### Interactividad
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
+- **@dnd-kit**:
+  - _¿Por qué?_ Librería moderna y modular para Drag & Drop. Ofrece mejor accesibilidad y control sobre los eventos de arrastre que las alternativas más antiguas.
+- **Recharts**:
+  - _¿Por qué?_ Librería de gráficos composable para React. Se integra perfectamente con el estado de React, permitiendo que los gráficos se animen y actualicen instantáneamente al mover una tarjeta.
 
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
-```
+## 🏗 Arquitectura del Proyecto
+
+La estructura se mantuvo lo más plana posible para facilitar la navegación:
+
+- **`src/store.ts`**: **El cerebro de la app**. Contiene toda la lógica de negocio:
+  - Estado de iniciativas y asignaciones.
+  - Acciones (asignar, remover, actualizar horas).
+  - Cálculo de estadísticas (KPIs) en tiempo real.
+- **`src/data.ts`**: Separación de los datos iniciales (Mock) de la lógica. Esto facilita la futura integración con el backend (solo habrá que reemplazar la carga inicial).
+- **`src/types.ts`**: Definiciones de TypeScript compartidas (Single Source of Truth) para evitar inconsistencias en los nombres de propiedades.
+- **`src/components/`**:
+  - `QuarterZone`: Componente inteligente que maneja la lógica de un trimestre (cálculo de límites, visualización de alertas).
+  - `InitiativeCard`: Tarjeta visual con soporte para Drag & Drop.
+  - `Modals`: (Assignment, Quarter, Confirmation) separados para mantener limpio el código del Dashboard.
+
+## ✨ Funcionalidades Clave Implementadas
+
+1.  **Dashboard Interactivo**:
+    - **Drag & Drop**: Arrastrar iniciativas desde el Backlog a los Trimestres (Q1-Q4).
+    - **Validación de Horas**: Alertas visuales y bloqueo si se intentan asignar 0 horas.
+    - **Feedback Visual**: Indicadores de "Excedido" en los trimestres si se supera la capacidad.
+2.  **Gestión de Backlog**:
+    - Filtros avanzados (Texto, Stream, Tipo, Prioridad) para manejar grandes volúmenes de datos (40+ iniciativas).
+3.  **Visualización de Datos**:
+    - Gráficos de Pastel y Barras que reflejan la distribución actual de la planificación.
+    - Barra de progreso de capacidad anual en el perfil.
+4.  **Modales de Gestión**:
+    - **Asignación**: Permite distribuir horas y asignar a múltiples trimestres.
+    - **Detalle de Trimestre**: Vista expandida para cuando hay muchas actividades en un Q.
+
+## 💻 Instalación y Ejecución
+
+1.  **Instalar dependencias**:
+
+    ```bash
+    npm install
+    ```
+
+2.  **Correr en desarrollo**:
+
+    ```bash
+    npm run dev
+    ```
+
+3.  **Construir para producción**:
+    ```bash
+    npm run build
+    ```
+
+---
+
+_Proyecto desarrollado para evento de planificación ITBP._

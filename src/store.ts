@@ -1,12 +1,13 @@
 import { create } from "zustand";
-import { persist } from "zustand/middleware";
-import type { Assignments, Initiative, Quarter } from "./types";
-import { INITIAL_INITIATIVES } from "./data";
+import type { Initiative, Quarter } from "./types";
+
+const API_URL = "https://planning-backend-production.up.railway.app";
 
 interface PlanningState {
   initiatives: Initiative[];
-  assignments: Assignments;
-  quarterlyDeliverables: Record<Quarter, string[]>; // Para mantener el orden de inserción
+  isLoading: boolean;
+  error: string | null;
+  fetchInitiatives: () => Promise<void>;
   assignToQuarter: (initiativeId: string, quarter: Quarter) => void;
   removeFromQuarter: (initiativeId: string, quarter: Quarter) => void;
   updateInitiativeHours: (
@@ -14,7 +15,6 @@ interface PlanningState {
     hours: Partial<Record<Quarter, number>>,
   ) => void;
   resetAssignments: () => void;
-  getInitiativesByUser: (user: string) => Initiative[];
   getUserStats: (user: string) => {
     q1Used: number;
     q2Used: number;
@@ -24,104 +24,127 @@ interface PlanningState {
   };
 }
 
-export const usePlanningStore = create<PlanningState>()(
-  persist(
-    (set, get) => ({
-      initiatives: INITIAL_INITIATIVES,
-      assignments: INITIAL_INITIATIVES.reduce((acc, init) => {
-        const quarters: Quarter[] = [];
-        if (init.hours.q1 > 0) quarters.push("q1");
-        if (init.hours.q2 > 0) quarters.push("q2");
-        if (init.hours.q3 > 0) quarters.push("q3");
-        if (init.hours.q4 > 0) quarters.push("q4");
-        if (quarters.length > 0) acc[init.id] = quarters;
-        return acc;
-      }, {} as Assignments),
-      quarterlyDeliverables: INITIAL_INITIATIVES.reduce(
-        (acc, init) => {
-          (["q1", "q2", "q3", "q4"] as Quarter[]).forEach((q) => {
-            if (init.hours[q] > 0) {
-              if (!acc[q]) acc[q] = [];
-              acc[q].push(init.id);
-            }
-          });
-          return acc;
-        },
-        {} as Record<Quarter, string[]>,
+export const usePlanningStore = create<PlanningState>((set, get) => ({
+  initiatives: [],
+  isLoading: false,
+  error: null,
+
+  fetchInitiatives: async () => {
+    set({ isLoading: true, error: null });
+    try {
+      const res = await fetch(`${API_URL}/initiatives`);
+      if (!res.ok) throw new Error("Failed to fetch initiatives");
+      const data = await res.json();
+      set({ initiatives: data, isLoading: false });
+    } catch (err) {
+      set({ error: (err as Error).message, isLoading: false });
+    }
+  },
+
+  assignToQuarter: async (id, quarter) => {
+    const { initiatives } = get();
+    const initiative = initiatives.find((i) => i.id === id);
+    if (!initiative) return;
+
+    const currentQuarters = initiative.assignedQuarters || [];
+    if (currentQuarters.includes(quarter)) return;
+
+    const newQuarters = [...currentQuarters, quarter];
+
+    // Optimistic update
+    set({
+      initiatives: initiatives.map((i) =>
+        i.id === id ? { ...i, assignedQuarters: newQuarters } : i,
       ),
-      assignToQuarter: (id, q) =>
-        set((state) => {
-          const current = state.assignments[id] || [];
-          const currentDeliverables = state.quarterlyDeliverables[q] || [];
+    });
 
-          if (current.includes(q)) return state;
+    try {
+      await fetch(`${API_URL}/initiatives/${id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ assignedQuarters: newQuarters }),
+      });
+    } catch (error) {
+      console.error("Failed to assign quarter", error);
+      get().fetchInitiatives(); // Rollback on error
+    }
+  },
 
-          return {
-            assignments: { ...state.assignments, [id]: [...current, q] },
-            quarterlyDeliverables: {
-              ...state.quarterlyDeliverables,
-              [q]: [...currentDeliverables, id], // Agregamos al final
-            },
-          };
-        }),
-      removeFromQuarter: (id, q) =>
-        set((state) => {
-          const current = state.assignments[id] || [];
-          const next = current.filter((x) => x !== q);
-          const newAssignments = { ...state.assignments };
-          if (next.length === 0) delete newAssignments[id];
-          else newAssignments[id] = next;
+  removeFromQuarter: async (id, quarter) => {
+    const { initiatives } = get();
+    const initiative = initiatives.find((i) => i.id === id);
+    if (!initiative) return;
 
-          const currentDeliverables = state.quarterlyDeliverables[q] || [];
-          const newDeliverables = currentDeliverables.filter((x) => x !== id);
+    const newQuarters = (initiative.assignedQuarters || []).filter(
+      (q) => q !== quarter,
+    );
 
-          return {
-            assignments: newAssignments,
-            quarterlyDeliverables: {
-              ...state.quarterlyDeliverables,
-              [q]: newDeliverables,
-            },
-          };
-        }),
-      updateInitiativeHours: (id, newHours) =>
-        set((state) => ({
-          initiatives: state.initiatives.map((init) => {
-            if (init.id !== id) return init;
-            const updatedHours = { ...init.hours, ...newHours };
-            updatedHours.total =
-              updatedHours.q1 +
-              updatedHours.q2 +
-              updatedHours.q3 +
-              updatedHours.q4;
-            return { ...init, hours: updatedHours };
-          }),
-        })),
-      resetAssignments: () => set({ assignments: {} }),
-      getInitiativesByUser: (user) =>
-        get().initiatives.filter((i) => i.itBusinessPartner === user),
-      getUserStats: (user) => {
-        const { initiatives, assignments } = get();
-        const stats = {
-          q1Used: 0,
-          q2Used: 0,
-          q3Used: 0,
-          q4Used: 0,
-          totalUsed: 0,
-        };
-        initiatives
-          .filter((i) => i.itBusinessPartner === user)
-          .forEach((i) => {
-            const assigned = assignments[i.id] || [];
-            if (assigned.includes("q1")) stats.q1Used += i.hours.q1;
-            if (assigned.includes("q2")) stats.q2Used += i.hours.q2;
-            if (assigned.includes("q3")) stats.q3Used += i.hours.q3;
-            if (assigned.includes("q4")) stats.q4Used += i.hours.q4;
-          });
-        stats.totalUsed =
-          stats.q1Used + stats.q2Used + stats.q3Used + stats.q4Used;
-        return stats;
-      },
-    }),
-    { name: "planning-storage-v5" },
-  ),
-);
+    // Optimistic update
+    set({
+      initiatives: initiatives.map((i) =>
+        i.id === id ? { ...i, assignedQuarters: newQuarters } : i,
+      ),
+    });
+
+    try {
+      await fetch(`${API_URL}/initiatives/${id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ assignedQuarters: newQuarters }),
+      });
+    } catch (error) {
+      console.error("Failed to remove quarter", error);
+      get().fetchInitiatives();
+    }
+  },
+
+  updateInitiativeHours: async (id, hours) => {
+    // Optimistic update
+    set((state) => ({
+      initiatives: state.initiatives.map((init) => {
+        if (init.id !== id) return init;
+        const updatedHours = { ...init.hours, ...hours };
+        updatedHours.total =
+          updatedHours.q1 + updatedHours.q2 + updatedHours.q3 + updatedHours.q4;
+        return { ...init, hours: updatedHours };
+      }),
+    }));
+
+    try {
+      await fetch(`${API_URL}/initiatives/${id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ hours }),
+      });
+    } catch (error) {
+      console.error("Failed to update hours", error);
+      get().fetchInitiatives();
+    }
+  },
+
+  resetAssignments: async () => {
+    // Not implemented in backend yet or handled differently
+  },
+
+  getUserStats: (user) => {
+    const { initiatives } = get();
+    const stats = {
+      q1Used: 0,
+      q2Used: 0,
+      q3Used: 0,
+      q4Used: 0,
+      totalUsed: 0,
+    };
+    initiatives
+      .filter((i) => i.itBusinessPartner === user)
+      .forEach((i) => {
+        const assigned = i.assignedQuarters || [];
+        if (assigned.includes("q1")) stats.q1Used += i.hours.q1;
+        if (assigned.includes("q2")) stats.q2Used += i.hours.q2;
+        if (assigned.includes("q3")) stats.q3Used += i.hours.q3;
+        if (assigned.includes("q4")) stats.q4Used += i.hours.q4;
+      });
+    stats.totalUsed = stats.q1Used + stats.q2Used + stats.q3Used + stats.q4Used;
+    return stats;
+  },
+}));

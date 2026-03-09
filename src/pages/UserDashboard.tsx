@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import {
   DndContext,
@@ -93,10 +93,8 @@ export default function UserDashboard() {
 
   // Store
   const initiatives = usePlanningStore((state) => state.initiatives);
-  const assignments = usePlanningStore((state) => state.assignments);
-  const quarterlyDeliverables = usePlanningStore(
-    (state) => state.quarterlyDeliverables,
-  );
+  const fetchInitiatives = usePlanningStore((state) => state.fetchInitiatives);
+  const isLoading = usePlanningStore((state) => state.isLoading);
   const assignToQuarter = usePlanningStore((state) => state.assignToQuarter);
   const removeFromQuarter = usePlanningStore(
     (state) => state.removeFromQuarter,
@@ -113,6 +111,10 @@ export default function UserDashboard() {
       },
     }),
   );
+
+  useEffect(() => {
+    fetchInitiatives();
+  }, [fetchInitiatives]);
 
   // Datos derivados
   const userName = id || "";
@@ -169,7 +171,7 @@ export default function UserDashboard() {
   const barData = (["q1", "q2", "q3", "q4"] as Quarter[]).map((q) => {
     const data: any = { name: q.toUpperCase() };
     userInitiatives.forEach((init) => {
-      if (assignments[init.id]?.includes(q)) {
+      if (init.assignedQuarters?.includes(q)) {
         data[init.workType] = (data[init.workType] || 0) + init.hours[q];
       }
     });
@@ -225,18 +227,16 @@ export default function UserDashboard() {
   };
 
   const getQuarterInitiatives = (q: Quarter) => {
-    // Usamos quarterlyDeliverables para mantener el orden de inserción
-    const ids = quarterlyDeliverables[q] || [];
-    return ids
-      .map((id) => initiatives.find((i) => i.id === id))
-      .filter(
-        (i): i is Initiative =>
-          i !== undefined && i.itBusinessPartner === userName,
-      );
+    // Filtramos directamente las iniciativas que tienen el quarter asignado
+    return initiatives.filter(
+      (i) =>
+        i.itBusinessPartner === userName && i.assignedQuarters?.includes(q),
+    );
   };
 
   const backlogInitiatives = userInitiatives.filter((init) => {
-    const isAssigned = assignments[init.id] && assignments[init.id].length > 0;
+    const isAssigned =
+      init.assignedQuarters && init.assignedQuarters.length > 0;
 
     // Filtro de Pestaña (Pendientes vs Todas)
     if (backlogTab === "pending" && isAssigned) return false;
@@ -260,6 +260,16 @@ export default function UserDashboard() {
 
     return true;
   });
+
+  if (isLoading) {
+    return (
+      <TotemLayout>
+        <div className="flex-1 flex items-center justify-center text-2xl text-neutral-grey-deep font-bold">
+          Cargando iniciativas...
+        </div>
+      </TotemLayout>
+    );
+  }
 
   return (
     <DndContext
@@ -541,6 +551,9 @@ export default function UserDashboard() {
             <div className="flex items-center justify-between">
               <h2 className="text-2xl font-black text-brand-red-deep">
                 Backlog de Iniciativas
+                <span className="ml-2 text-lg font-medium text-neutral-grey-deep">
+                  ({backlogInitiatives.length})
+                </span>
               </h2>
               <div className="flex bg-neutral-grey-soft rounded-lg p-1">
                 <button
@@ -645,7 +658,9 @@ export default function UserDashboard() {
                   key={init.id}
                   initiative={init}
                   isAssigned={
-                    assignments[init.id] && assignments[init.id].length > 0
+                    !!(
+                      init.assignedQuarters && init.assignedQuarters.length > 0
+                    )
                   }
                 />
               ))}

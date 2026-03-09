@@ -40,6 +40,7 @@ export interface Initiative {
   priority: Priority;
   classification: Classification;
   hours: { q1: number; q2: number; q3: number; q4: number; total: number };
+  assignedQuarters?: Quarter[];
 }
 
 export type Assignments = Record<string, Quarter[]>;
