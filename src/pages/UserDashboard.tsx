@@ -287,7 +287,9 @@ export default function UserDashboard() {
             </div>
             <div>
               <h1 className="text-xl font-black text-brand-red-deep leading-tight">
-                {userName}
+                {userName === "Randol Benavides"
+                  ? "Randol, Rommel, Julian"
+                  : userName}
               </h1>
             </div>
           </div>
