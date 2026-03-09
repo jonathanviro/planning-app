@@ -220,8 +220,17 @@ export default function UserDashboard() {
   };
 
   const handleConfirmRemove = () => {
-    if (confirmModal.initiativeId && confirmModal.quarterId) {
-      removeFromQuarter(confirmModal.initiativeId, confirmModal.quarterId);
+    const { initiativeId, quarterId } = confirmModal;
+    if (initiativeId && quarterId) {
+      const initiative = initiatives.find((i) => i.id === initiativeId);
+      if (initiative) {
+        const updatedHours = {
+          ...initiative.hours,
+          [quarterId]: 0,
+        };
+        updateInitiativeHours(initiativeId, updatedHours);
+      }
+      removeFromQuarter(initiativeId, quarterId);
     }
     setConfirmModal({ isOpen: false, initiativeId: null, quarterId: null });
   };
