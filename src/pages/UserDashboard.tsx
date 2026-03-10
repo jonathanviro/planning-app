@@ -70,6 +70,20 @@ const RANDOL_TEAM_IMAGES = [
   "/profiles/julian.jpg",
 ];
 
+// Mapa de imágenes (duplicado de SelectProfile para acceso aquí)
+const PROFILE_IMAGES: Record<string, string[]> = {
+  "Andy Sánchez": ["/profiles/andy.jpg"],
+  "Danny Pérez": ["/profiles/danny.jpg"],
+  "Edwin Calderón": ["/profiles/edwin.jpg"],
+  "Leslye Pérez": ["/profiles/leslye.jpg"],
+  "Randol Benavides": [
+    "/profiles/randol.jpg",
+    "/profiles/rommel.jpg",
+    "/profiles/julian.jpg",
+  ],
+  "Saúl Bohórquez": ["/profiles/saul.jpg"],
+};
+
 export default function UserDashboard() {
   const { id } = useParams();
   const navigate = useNavigate();
@@ -128,6 +142,7 @@ export default function UserDashboard() {
   const activeInitiative = activeId
     ? userInitiatives.find((i) => i.id === activeId)
     : null;
+  const userImage = PROFILE_IMAGES[userName]?.[0];
 
   // Preparación de Datos para Gráficos
   const pieWorkTypeData = Object.values(
@@ -316,8 +331,16 @@ export default function UserDashboard() {
                 ))}
               </div>
             ) : (
-              <div className="w-14 h-14 rounded-full bg-brand-red text-white flex items-center justify-center text-2xl font-bold shadow-sm ring-2 ring-white">
-                {userName.charAt(0)}
+              <div className="w-14 h-14 rounded-full bg-brand-red text-white flex items-center justify-center text-2xl font-bold shadow-sm ring-2 ring-white overflow-hidden">
+                {userImage ? (
+                  <img
+                    src={userImage}
+                    alt={userName}
+                    className="w-full h-full object-cover"
+                  />
+                ) : (
+                  userName.charAt(0)
+                )}
               </div>
             )}
             <div>
