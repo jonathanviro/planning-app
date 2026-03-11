@@ -297,11 +297,28 @@ export default function UserDashboard() {
   });
 
   // --- LÓGICA DE GENERACIÓN DE PDF ---
-  const handleDownloadPdf = () => {
+  const handleDownloadPdf = async () => {
     setIsGeneratingPdf(true);
     
     try {
       const doc = new jsPDF();
+
+      // Cargar Logo
+      try {
+        const img = new Image();
+        img.src = "/logo.png";
+        await new Promise((resolve, reject) => {
+          img.onload = resolve;
+          img.onerror = reject;
+        });
+        const pageWidth = doc.internal.pageSize.getWidth();
+        const logoWidth = 30; // Ancho en mm
+        const logoHeight = (img.height * logoWidth) / img.width;
+        doc.addImage(img, "PNG", pageWidth - 20 - logoWidth, 10, logoWidth, logoHeight);
+      } catch (e) {
+        console.error("Error cargando logo", e);
+      }
+
       let y = 20; // Posición vertical inicial
       const pageHeight = doc.internal.pageSize.height;
       const margin = 20;
@@ -374,19 +391,65 @@ export default function UserDashboard() {
         } else {
           doc.setTextColor(50);
           qInitiatives.forEach((init) => {
-            checkPageBreak(10);
-            const title =
-              init.workName.length > 40
-                ? init.workName.substring(0, 37) + "..."
-                : init.workName;
-            doc.text(title, margin, y);
-            doc.text(init.workType.split(" ")[0], 100, y); // "Operative", "SP"
+            const titleLines = doc.splitTextToSize(init.workName, 75);
+            const typeLines = doc.splitTextToSize(init.workType, 60);
+            
+            // Calculamos la altura basada en el texto más largo (nombre o tipo)
+            const maxLines = Math.max(titleLines.length, typeLines.length);
+            const rowHeight = maxLines * 6 + 4;
+            checkPageBreak(rowHeight);
+
+            doc.text(titleLines, margin, y);
+            doc.text(typeLines, 100, y);
             doc.text(`${init.hours[q]}h`, 170, y);
-            y += 7;
+            y += rowHeight;
           });
           y += 5; // Espacio extra entre trimestres
         }
       });
+
+      // --- SECCIÓN BACKLOG (PENDIENTES) ---
+      checkPageBreak(40);
+      doc.setFontSize(16);
+      doc.setTextColor(200, 16, 46);
+      doc.text("Backlog (Pendientes)", margin, y);
+      y += 8;
+
+      // Encabezados Backlog
+      doc.setFontSize(10);
+      doc.setTextColor(0);
+      doc.setFont("helvetica", "bold");
+      doc.text("Iniciativa", margin, y);
+      doc.text("Stream", 100, y);
+      doc.text("Prioridad", 150, y);
+      y += 2;
+      doc.line(margin, y, 190, y);
+      y += 6;
+
+      // Filas Backlog
+      doc.setFont("helvetica", "normal");
+      doc.setTextColor(50);
+
+      const pending = userInitiatives.filter(
+        (i) => !i.assignedQuarters || i.assignedQuarters.length === 0,
+      );
+
+      if (pending.length === 0) {
+        doc.setTextColor(150);
+        doc.text("No hay iniciativas pendientes", margin, y);
+        y += 10;
+      } else {
+        pending.forEach((init) => {
+          const titleLines = doc.splitTextToSize(init.workName, 75);
+          const rowHeight = titleLines.length * 6 + 2;
+          checkPageBreak(rowHeight);
+
+          doc.text(titleLines, margin, y);
+          doc.text(init.stream, 100, y);
+          doc.text(init.priority, 150, y);
+          y += rowHeight;
+        });
+      }
 
       doc.save(`Planificacion_2026_${userName.replace(/\s+/g, "_")}.pdf`);
     } catch (error) {
