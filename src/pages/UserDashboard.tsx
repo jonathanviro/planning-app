@@ -23,8 +23,9 @@ import {
   ResponsiveContainer,
   LabelList,
 } from "recharts";
+import jsPDF from "jspdf";
 import clsx from "clsx";
-import { BarChart3, Search } from "lucide-react";
+import { BarChart3, Search, FileDown, Loader2 } from "lucide-react";
 
 import TotemLayout from "../components/TotemLayout";
 import InitiativeCard, {
@@ -95,6 +96,7 @@ export default function UserDashboard() {
   const [filterWorkType, setFilterWorkType] = useState("all");
   const [filterPriority, setFilterPriority] = useState("all");
   const [filterClassification, setFilterClassification] = useState("all");
+  const [isGeneratingPdf, setIsGeneratingPdf] = useState(false);
 
   // Modal State
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -294,6 +296,105 @@ export default function UserDashboard() {
     return true;
   });
 
+  // --- LÓGICA DE GENERACIÓN DE PDF ---
+  const handleDownloadPdf = () => {
+    setIsGeneratingPdf(true);
+    
+    try {
+      const doc = new jsPDF();
+      let y = 20; // Posición vertical inicial
+      const pageHeight = doc.internal.pageSize.height;
+      const margin = 20;
+
+      // Helper para saltar de página
+      const checkPageBreak = (spaceNeeded: number) => {
+        if (y + spaceNeeded > pageHeight - margin) {
+          doc.addPage();
+          y = 20;
+        }
+      };
+
+      // --- ENCABEZADO ---
+      doc.setFontSize(22);
+      doc.setTextColor(200, 16, 46); // Brand Red
+      doc.text("Planificación Estratégica 2026", margin, y);
+      y += 10;
+
+      doc.setFontSize(12);
+      doc.setTextColor(100);
+      doc.text(`IT Business Partner: ${userName}`, margin, y);
+      y += 8;
+      doc.text(
+        `Capacidad Utilizada: ${stats.totalUsed}h / ${QUARTER_LIMITS.total}h`,
+        margin,
+        y,
+      );
+      y += 15;
+
+      // LÍNEA SEPARADORA
+      doc.setDrawColor(200, 200, 200);
+      doc.line(margin, y, 190, y);
+      y += 10;
+
+      // --- TABLAS POR TRIMESTRE ---
+      const quarters: Quarter[] = ["q1", "q2", "q3", "q4"];
+
+      quarters.forEach((q) => {
+        checkPageBreak(60); // Verificar espacio para título y al menos un par de filas
+
+        // Título Trimestre
+        doc.setFontSize(16);
+        doc.setTextColor(200, 16, 46);
+        doc.text(
+          `Trimestre ${q.toUpperCase()} (${stats[`${q}Used` as keyof typeof stats]}h / ${QUARTER_LIMITS[q]}h)`,
+          margin,
+          y,
+        );
+        y += 8;
+
+        // Encabezados de Tabla
+        doc.setFontSize(10);
+        doc.setTextColor(0);
+        doc.setFont("helvetica", "bold");
+        doc.text("Iniciativa", margin, y);
+        doc.text("Tipo", 100, y);
+        doc.text("Horas", 170, y);
+        y += 2;
+        doc.line(margin, y, 190, y); // Línea bajo encabezado
+        y += 6;
+
+        // Filas
+        doc.setFont("helvetica", "normal");
+        const qInitiatives = getQuarterInitiatives(q);
+
+        if (qInitiatives.length === 0) {
+          doc.setTextColor(150);
+          doc.text("Sin asignaciones", margin, y);
+          y += 10;
+        } else {
+          doc.setTextColor(50);
+          qInitiatives.forEach((init) => {
+            checkPageBreak(10);
+            const title =
+              init.workName.length > 40
+                ? init.workName.substring(0, 37) + "..."
+                : init.workName;
+            doc.text(title, margin, y);
+            doc.text(init.workType.split(" ")[0], 100, y); // "Operative", "SP"
+            doc.text(`${init.hours[q]}h`, 170, y);
+            y += 7;
+          });
+          y += 5; // Espacio extra entre trimestres
+        }
+      });
+
+      doc.save(`Planificacion_2026_${userName.replace(/\s+/g, "_")}.pdf`);
+    } catch (error) {
+      console.error("Error generando PDF:", error);
+    }
+    setIsGeneratingPdf(false);
+  };
+
   if (isLoading) {
     return (
       <TotemLayout>
@@ -380,6 +481,18 @@ export default function UserDashboard() {
 
           {/* Controles */}
           <div className="flex items-center gap-3">
+            <button
+              onClick={handleDownloadPdf}
+              disabled={isGeneratingPdf}
+              className="flex items-center gap-2 px-5 py-3 rounded-2xl font-bold bg-neutral-grey-deep text-white hover:bg-neutral-grey transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-sm"
+            >
+              {isGeneratingPdf ? (
+                <Loader2 size={20} className="animate-spin" />
+              ) : (
+                <FileDown size={20} />
+              )}
+              <span>{isGeneratingPdf ? "Generando..." : "PDF"}</span>
+            </button>
             <button
               onClick={() => setAreChartsVisible(!areChartsVisible)}
               className={clsx(
@@ -773,6 +886,168 @@ export default function UserDashboard() {
           onClose={() => setConfirmModal({ ...confirmModal, isOpen: false })}
           onConfirm={handleConfirmRemove}
         />
+
+        {/* --- VISTA OCULTA PARA IMPRESIÓN (TABLAS) --- */}
+        <div
+          id="pdf-print-view"
+          className="absolute -top-[9999px] -left-[9999px] w-[1000px] bg-white p-10"
+        >
+          {/* Header PDF */}
+          <div className="flex items-center justify-between border-b-4 border-brand-red pb-4 mb-8">
+            <div>
+              <h1 className="text-4xl font-black text-brand-red-deep">
+                Planificación Estratégica 2026
+              </h1>
+              <p className="text-xl text-neutral-grey-deep mt-1">
+                IT Business Partner:{" "}
+                <span className="text-brand-red font-bold">{userName}</span>
+              </p>
+            </div>
+            <div className="text-right">
+              <div className="text-sm font-bold text-neutral-grey-deep uppercase">
+                Capacidad Utilizada
+              </div>
+              <div className="text-3xl font-black text-brand-red">
+                {stats.totalUsed}h{" "}
+                <span className="text-lg text-neutral-grey">
+                  / {QUARTER_LIMITS.total}h
+                </span>
+              </div>
+            </div>
+          </div>
+
+          {/* Tablas de Trimestres */}
+          <div className="space-y-8">
+            {(["q1", "q2", "q3", "q4"] as Quarter[]).map((q) => {
+              const qInitiatives = getQuarterInitiatives(q);
+              const limit = QUARTER_LIMITS[q];
+              const used = stats[`${q}Used` as keyof typeof stats];
+              const isExceeded = used > limit;
+
+              return (
+                <div key={q} className="break-inside-avoid">
+                  <div className="flex justify-between items-end mb-2 px-2">
+                    <h3 className="text-2xl font-black text-brand-red uppercase">
+                      Trimestre {q}
+                    </h3>
+                    <span
+                      className={clsx(
+                        "font-bold",
+                        isExceeded ? "text-brand-red" : "text-neutral-grey-deep",
+                      )}
+                    >
+                      {used} / {limit} h
+                    </span>
+                  </div>
+                  <table className="w-full text-left border-collapse">
+                    <thead>
+                      <tr className="bg-neutral-grey-soft text-brand-red-deep text-sm uppercase">
+                        <th className="p-2 rounded-l-lg">Iniciativa</th>
+                        <th className="p-2">Tipo</th>
+                        <th className="p-2">Prioridad</th>
+                        <th className="p-2 text-right rounded-r-lg">Horas</th>
+                      </tr>
+                    </thead>
+                    <tbody className="text-sm">
+                      {qInitiatives.length > 0 ? (
+                        qInitiatives.map((init, idx) => (
+                          <tr
+                            key={init.id}
+                            className={idx % 2 === 0 ? "bg-white" : "bg-neutral-50"}
+                          >
+                            <td className="p-2 font-bold text-neutral-800 border-b border-neutral-100">
+                              {init.workName}
+                            </td>
+                            <td className="p-2 text-neutral-600 border-b border-neutral-100">
+                              {init.workType}
+                            </td>
+                            <td className="p-2 border-b border-neutral-100">
+                              <span
+                                className={clsx(
+                                  "text-[10px] font-bold px-2 py-0.5 rounded-full uppercase",
+                                  init.priority === "Must Have"
+                                    ? "bg-brand-red/10 text-brand-red"
+                                    : "bg-neutral-200 text-neutral-600",
+                                )}
+                              >
+                                {init.priority}
+                              </span>
+                            </td>
+                            <td className="p-2 text-right font-bold text-brand-red border-b border-neutral-100">
+                              {init.hours[q]}h
+                            </td>
+                          </tr>
+                        ))
+                      ) : (
+                        <tr>
+                          <td
+                            colSpan={4}
+                            className="p-4 text-center text-neutral-400 italic"
+                          >
+                            Sin asignaciones este trimestre
+                          </td>
+                        </tr>
+                      )}
+                    </tbody>
+                  </table>
+                </div>
+              );
+            })}
+
+            {/* Tabla de Backlog (No asignados) */}
+            <div className="break-inside-avoid mt-8 pt-8 border-t-2 border-dashed border-neutral-300">
+              <h3 className="text-2xl font-black text-neutral-600 uppercase mb-4 px-2">
+                Backlog (Pendientes)
+              </h3>
+              <table className="w-full text-left border-collapse opacity-70">
+                <thead>
+                  <tr className="bg-neutral-200 text-neutral-600 text-sm uppercase">
+                    <th className="p-2 rounded-l-lg">Iniciativa</th>
+                    <th className="p-2">Stream</th>
+                    <th className="p-2">Tipo</th>
+                    <th className="p-2 rounded-r-lg">Prioridad</th>
+                  </tr>
+                </thead>
+                <tbody className="text-sm">
+                  {initiatives
+                    .filter(
+                      (i) =>
+                        i.itBusinessPartner === userName &&
+                        (!i.assignedQuarters || i.assignedQuarters.length === 0),
+                    )
+                    .map((init, idx) => (
+                      <tr
+                        key={init.id}
+                        className={idx % 2 === 0 ? "bg-white" : "bg-neutral-50"}
+                      >
+                        <td className="p-2 font-bold text-neutral-700 border-b border-neutral-100">
+                          {init.workName}
+                        </td>
+                        <td className="p-2 text-neutral-600 border-b border-neutral-100">
+                          {init.stream}
+                        </td>
+                        <td className="p-2 text-neutral-600 border-b border-neutral-100">
+                          {init.workType}
+                        </td>
+                        <td className="p-2 border-b border-neutral-100">
+                          <span
+                            className={clsx(
+                              "text-[10px] font-bold px-2 py-0.5 rounded-full uppercase",
+                              init.priority === "Must Have"
+                                ? "bg-brand-red/10 text-brand-red"
+                                : "bg-neutral-200 text-neutral-600",
+                            )}
+                          >
+                            {init.priority}
+                          </span>
+                        </td>
+                      </tr>
+                    ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
       </TotemLayout>
     </DndContext>
   );
